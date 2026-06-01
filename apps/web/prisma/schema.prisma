@@ -19,3 +19,47 @@ model ServiceRequest {
   @@index([service])
   @@index([createdAt])
 }
+
+model AdminUser {
+  id           String         @id @default(cuid())
+  email        String         @unique
+  passwordHash String
+  name         String?
+  role         String         @default("manager")
+  active       Boolean        @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  auditLogs    AuditLog[]
+  loginHistory LoginHistory[]
+}
+
+model AuditLog {
+  id         String     @id @default(cuid())
+  actorId    String?
+  action     String
+  entityType String
+  entityId   String?
+  metadata   Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime   @default(now())
+  actor      AdminUser? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([actorId])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
+
+model LoginHistory {
+  id        String     @id @default(cuid())
+  userId    String?
+  email     String
+  success   Boolean
+  createdAt DateTime   @default(now())
+  user      AdminUser? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([email])
+  @@index([success, createdAt])
+}
